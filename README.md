@@ -30,7 +30,7 @@
 
 <p>
     Create a database which stores some basic user information and their hourly rate. Your app
-    does not need to authorize users so there is no need to set a password.
+    does not need to authorise users so there is no need to set a password.
 </p>
 <br>
 <h2>Step 2</h2>
