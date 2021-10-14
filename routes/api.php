@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Response;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,5 +16,11 @@ use App\Http\Controllers\UserController;
 |
 */
 
+Route::get('/users', [UserController::class, 'index']);
+Route::get('/users/{user}', [UserController::class, 'show'])->missing(function (Request $request) {
+    return response()->json(['message' => "Record not found ($request->user)"]);
+});
 Route::post('/users', [UserController::class, 'store']);
-Route::put('/users/{id}', [UserController::class, 'update']);
+Route::put('/users/{user}', [UserController::class, 'update'])->missing(function (Request $request) {
+    return response()->json(['message' => "Record not found ($request->user)"]);
+});

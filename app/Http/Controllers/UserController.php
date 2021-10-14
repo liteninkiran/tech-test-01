@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Currency;
 use App\Http\Requests\UserCreateRequest;
 use App\Http\Requests\UserUpdateRequest;
+use App\Http\Requests\UserGetRequest;
 
 class UserController extends Controller
 {
@@ -14,9 +16,9 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        //
+    public function index() {
+        $users = User::with('currency')->get();
+        return $users;
     }
 
     /**
@@ -42,12 +44,19 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  User  $user
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
-    {
-        //
+    public function show(UserGetRequest $request, User $user) {
+        $driver = $request->driver ? $request->driver : 'internal';
+        $currency = Currency::where('code', '=', $request->currency)->first();
+        return response()->json([
+            'name' => $user->name,
+            'hourly_rate' => $user->hourly_rate,
+            'currency' => $user->currency->name,
+            'input_driver' => $driver,
+            'input_currency' => $currency->name,
+        ]);
     }
 
     /**
@@ -65,11 +74,10 @@ class UserController extends Controller
      * Update the specified resource in storage.
      *
      * @param  App\Http\Requests\UserUpdateRequest  $request
-     * @param  int  $id
+     * @param  User  $user
      * @return \Illuminate\Http\Response
      */
-    public function update(UserUpdateRequest $request, $id) {
-        $user = User::find($id);
+    public function update(UserUpdateRequest $request, User $user) {
         $user->update($request->validated());
         return $user;
     }

@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UserUpdateRequest extends FormRequest
+class UserGetRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,10 +25,8 @@ class UserUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'hourly_rate' => ['required', 'numeric', 'between:0,999999.99'],
-            'currency_id' => ['required', 'exists:currencies,id'],
-            'email' => ['required', 'string', 'email', Rule::unique('users')->ignore($this->user->id)],
+            'currency' => ['required', 'min:3', 'max:3', Rule::exists('currencies', 'code')],
+            'driver' => ['nullable', Rule::in(['internal', 'external'])],
         ];
     }
 }
