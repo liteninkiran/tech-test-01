@@ -9,6 +9,7 @@ use App\Models\ExchangeRate;
 use App\Http\Requests\UserCreateRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Http\Requests\UserGetRequest;
+use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
@@ -54,12 +55,25 @@ class UserController extends Controller
         $currencyTo = Currency::where('code', '=', $request->currency)->first();
         $currencyFrom = Currency::where('id', '=', $user->currency_id)->first();
 
-        $rate = ExchangeRate::query()
-            ->where('currency_to', '=', $currencyTo->id)
-            ->where('currency_from', '=', $currencyFrom->id)
-            ->first();
+        if ($driver === 'internal') {
+            // Using internally held exchange rates
+            $rate = ExchangeRate::query()
+                ->where('currency_to', '=', $currencyTo->id)
+                ->where('currency_from', '=', $currencyFrom->id)
+                ->first();
+            $multiplier = $rate ? $rate->exchange_rate : 1;
+        } else {
+            // Using externally held exchange rates
+            $key = env('EXCHANGE_API_KEY');
+            $url = "http://api.exchangeratesapi.io/v1/latest?access_key={$key}&symbols=GBP,USD,EUR";  // Cannot change base from EUR
+            $resp = Http::get($url);
 
-        $multiplier = $rate ? $rate->exchange_rate : 1;
+            if ($user->currency->code === 'EUR') {
+                $multiplier = $resp['rates']['EUR'] * $resp['rates'][$request->currency];
+            } else {
+                $multiplier = $resp['rates'][$request->currency] / $resp['rates'][$currencyFrom->code];
+            }
+        }
 
         return response()->json([
             'name' => $user->name,
