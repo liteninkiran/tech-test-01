@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Currency;
+use App\Models\ExchangeRate;
 use App\Http\Requests\UserCreateRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Http\Requests\UserGetRequest;
@@ -49,13 +50,22 @@ class UserController extends Controller
      */
     public function show(UserGetRequest $request, User $user) {
         $driver = $request->driver ? $request->driver : 'internal';
-        $currency = Currency::where('code', '=', $request->currency)->first();
+
+        $currencyTo = Currency::where('code', '=', $request->currency)->first();
+        $currencyFrom = Currency::where('id', '=', $user->currency_id)->first();
+
+        $rate = ExchangeRate::query()
+            ->where('currency_to', '=', $currencyTo->id)
+            ->where('currency_from', '=', $currencyFrom->id)
+            ->first();
+
+        $multiplier = $rate ? $rate->exchange_rate : 1;
+
         return response()->json([
             'name' => $user->name,
-            'hourly_rate' => $user->hourly_rate,
-            'currency' => $user->currency->name,
-            'input_driver' => $driver,
-            'input_currency' => $currency->name,
+            'hourly_rate' => $user->hourly_rate * $multiplier,
+            'currency_code' => $currencyTo->code,
+            'currency_name' => $currencyTo->name,
         ]);
     }
 
