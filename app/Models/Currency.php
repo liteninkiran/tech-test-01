@@ -22,4 +22,12 @@ class Currency extends Model
     public function users() {
         return $this->hasMany(User::class);
     }
+
+    public function fromExchangeRates() {
+        return $this->hasMany(ExchangeRate::class, 'currency_from');
+    }
+
+    public function toExchangeRates() {
+        return $this->hasMany(ExchangeRate::class, 'currency_to');
+    }
 }
